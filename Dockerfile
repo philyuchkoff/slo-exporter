@@ -1,14 +1,14 @@
 # Релизный образ: минимальный, без прав root, со встроенной проверкой готовности.
+# UID 65534 соответствует стандартному пользователю nobody в alpine.
 FROM alpine:3.21
 
 RUN apk add --no-cache ca-certificates \
-    && adduser -D -u 65534 slo-exporter \
     && mkdir -p /slo_exporter \
-    && chown slo-exporter:slo-exporter /slo_exporter
+    && chown -R 65534:65534 /slo_exporter
 
-COPY slo_exporter /slo_exporter/slo_exporter
+COPY --chown=65534:65534 slo_exporter /slo_exporter/slo_exporter
 
-USER slo-exporter
+USER 65534:65534
 WORKDIR /slo_exporter
 
 EXPOSE 8080
