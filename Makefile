@@ -4,6 +4,7 @@ TMP_DIR ?= $(SRC_DIR)/tmp
 TMP_BIN_DIR ?= $(TMP_DIR)/bin
 
 GORELEASER_VERSION ?= v2.4.4
+GOLANGCI_LINT_VERSION ?= v1.64.8
 
 .PHONY: all
 all: lint test-and-coverage build test-release
@@ -29,7 +30,7 @@ $(RELEASE_NOTES): $(TMP_DIR)
 .PHONY: golangci-lint
 golangci-lint:
 	@echo "Downloading golangci-lint..."
-	go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.61.0
+	go install github.com/golangci/golangci-lint/cmd/golangci-lint@$(GOLANGCI_LINT_VERSION)
 
 .PHONY: lint
 lint: golangci-lint
@@ -54,7 +55,7 @@ e2e-test: build
 
 .PHONY: test
 test: $(TMP_DIR)
-	go test -v --race -coverprofile=$(TMP_DIR)/coverage.out $(shell go list $(SRC_DIR)/... | grep -v /vendor/)
+	go test -v --race -count=1 -coverprofile=$(TMP_DIR)/coverage.out $(shell go list $(SRC_DIR)/... | grep -v /vendor/)
 
 .PHONY: benchmark
 benchmark: clean
