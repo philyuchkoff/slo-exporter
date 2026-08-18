@@ -120,7 +120,7 @@ func setupLogger(logLevel, logFormat string) (*logrus.Logger, error) {
 	return newLogger, nil
 }
 
-func setupDefaultServer(listenAddr string, liveness, readiness *prober.Prober, logger *logrus.Logger) (*http.Server, *mux.Router) {
+func setupDefaultServer(listenAddr string, liveness, readiness *prober.Prober, logger *logrus.Logger, enablePprof, enableDynamicLogging bool) (*http.Server, *mux.Router) {
 	dynamicLoggingHandler := func(w http.ResponseWriter, req *http.Request) {
 		if req.Method == http.MethodPost {
 			lvl, err := logrus.ParseLevel(req.URL.Query().Get("level"))
@@ -148,22 +148,33 @@ func setupDefaultServer(listenAddr string, liveness, readiness *prober.Prober, l
 	router.Handle("/metrics", promHandler)
 	router.HandleFunc("/liveness", liveness.HandleFunc)
 	router.HandleFunc("/readiness", readiness.HandleFunc)
-	router.HandleFunc("/logging", dynamicLoggingHandler)
-	router.PathPrefix("/debug/pprof/").Handler(http.DefaultServeMux)
+	if enablePprof {
+		router.PathPrefix("/debug/pprof/").Handler(http.DefaultServeMux)
+	}
+	if enableDynamicLogging {
+		router.HandleFunc("/logging", dynamicLoggingHandler)
+	}
 	return &http.Server{Addr: listenAddr, Handler: router}, router
 }
 
 func main() {
-	// Enable mutex and block profiling
-	runtime.SetBlockProfileRate(1)
-	runtime.SetMutexProfileFraction(1)
-
 	configFilePath := kingpin.Flag("config-file", "SLO exporter configuration file.").ExistingFile()
 	logLevel := kingpin.Flag("log-level", "Log level.").Envar("SLO_EXPORTER_LOGLEVEL").Default("info").Enum("error", "warn", "info", "debug", "trace")
 	logFormat := kingpin.Flag("log-format", "Log format (text, json).").Envar("SLO_EXPORTER_LOGFORMAT").Default("text").Enum("json", "text")
 	checkConfig := kingpin.Flag("check-config", "Only check config file and exit with 0 if ok and other status code if not.").Default("false").Bool()
 	versionFlag := kingpin.Flag("version", "Display version.").Default("false").Bool()
+	enablePprof := kingpin.Flag("enable-pprof", "Enable Go profiling via pprof on /debug/pprof/ web interface path. Disabled by default.").Default("false").Bool()
+	blockProfileRate := kingpin.Flag("block-profile-rate", "Block profile rate, used only when pprof is enabled. Set to 0 to disable block profiling.").Default("0").Int()
+	mutexProfileFraction := kingpin.Flag("mutex-profile-fraction", "Mutex profile fraction, used only when pprof is enabled. Set to 0 to disable mutex profiling.").Default("0").Int()
+	enableDynamicLogging := kingpin.Flag("enable-dynamic-logging", "Enable the /logging HTTP endpoint to dynamically change the log level.").Default("true").Bool()
 	kingpin.Parse()
+
+	// Enable block and mutex profiling only when requested, as profiling every
+	// event adds noticeable overhead.
+	if *enablePprof {
+		runtime.SetBlockProfileRate(*blockProfileRate)
+		runtime.SetMutexProfileFraction(*mutexProfileFraction)
+	}
 
 	// If version is requested, end here.
 	if *versionFlag {
@@ -213,7 +224,7 @@ func main() {
 	gracefulShutdownRequestChan := make(chan struct{}, 10)
 
 	// Start default server
-	defaultServer, router := setupDefaultServer(conf.WebServerListenAddress, liveness, readiness, logger)
+	defaultServer, router := setupDefaultServer(conf.WebServerListenAddress, liveness, readiness, logger, *enablePprof, *enableDynamicLogging)
 	go func() {
 		logger.Infof("HTTP server listening on http://%+v", defaultServer.Addr)
 		if err := defaultServer.ListenAndServe(); err != nil {
