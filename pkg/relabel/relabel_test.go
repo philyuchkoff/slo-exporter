@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"testing"
 
-	"github.com/prometheus/prometheus/pkg/relabel"
+	"github.com/prometheus/prometheus/model/relabel"
 	"github.com/seznam/slo-exporter/pkg/event"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"

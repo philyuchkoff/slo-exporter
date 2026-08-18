@@ -13,10 +13,11 @@ import (
 	"github.com/spf13/viper"
 
 	logrusAdapter "github.com/go-kit/kit/log/logrus"
-	"github.com/grafana/loki/clients/pkg/promtail/positions"
-	"github.com/hpcloud/tail"
+	"github.com/nxadm/tail"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/sirupsen/logrus"
+
+	"github.com/seznam/slo-exporter/pkg/positions"
 )
 
 var (
@@ -55,7 +56,7 @@ func (c *tailerConfig) getDefaultPositionsFilePath() string {
 	return c.TailedFile + ".pos"
 }
 
-// Tailer is an instance of github.com/hpcloud/tail dedicated to a single file.
+// Tailer is an instance of github.com/nxadm/tail dedicated to a single file.
 type Tailer struct {
 	filename                string
 	tail                    *tail.Tail
@@ -252,7 +253,7 @@ func (t *Tailer) Stop() {
 // - offset persistence
 // - prometheus metrics.
 func (t *Tailer) markOffsetPosition() error {
-	// we may lose a log line due to claimed inaccuracy of Tail.tell (https://godoc.org/github.com/hpcloud/tail#Tail.Tell)
+	// we may lose a log line due to claimed inaccuracy of Tail.tell (https://godoc.org/github.com/nxadm/tail#Tail.Tell)
 	offset, err := t.tail.Tell()
 	if err != nil {
 		if errors.Unwrap(err) != nil {

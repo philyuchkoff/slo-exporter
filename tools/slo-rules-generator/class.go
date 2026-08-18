@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"sort"
 
-	"github.com/prometheus/prometheus/pkg/rulefmt"
+	"github.com/prometheus/prometheus/model/rulefmt"
 )
 
 const (

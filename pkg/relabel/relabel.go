@@ -11,7 +11,7 @@ import (
 	"github.com/spf13/viper"
 	"gopkg.in/yaml.v2"
 
-	"github.com/prometheus/prometheus/pkg/relabel"
+	"github.com/prometheus/prometheus/model/relabel"
 	"github.com/sirupsen/logrus"
 )
 
@@ -91,8 +91,9 @@ func (r *EventRelabelManager) observeDuration(start time.Time) {
 func (r *EventRelabelManager) relabelEvent(e *event.Raw) *event.Raw {
 	newLabels := e.Metadata.AsPrometheusLabels()
 	for _, relabelConfigRule := range r.relabelConfig {
-		newLabels = relabel.Process(newLabels, &relabelConfigRule)
-		if newLabels == nil {
+		var keep bool
+		newLabels, keep = relabel.Process(newLabels, &relabelConfigRule)
+		if !keep {
 			return nil
 		}
 	}
