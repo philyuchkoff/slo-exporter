@@ -1,6 +1,6 @@
 module github.com/seznam/slo-exporter
 
-go 1.25.0
+go 1.27.3
 
 require (
 	github.com/envoyproxy/go-control-plane/envoy v1.37.0

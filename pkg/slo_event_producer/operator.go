@@ -52,7 +52,7 @@ type labelsExposableOperator interface {
 func newOperator(options operatorOptions) (operator, error) {
 	operatorFactory, ok := operatorFactoryRegistry[options.Operator]
 	if !ok {
-		var allowedKeys []string
+		allowedKeys := make([]string, 0, len(operatorFactoryRegistry))
 		for k := range operatorFactoryRegistry {
 			allowedKeys = append(allowedKeys, k)
 		}

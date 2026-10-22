@@ -141,7 +141,8 @@ func New(conf classifierConfig, logger logrus.FieldLogger) (*DynamicClassifier, 
 }
 
 func (dc *DynamicClassifier) initializeEventsMetric() {
-	labels := []string{"result", "classified_by"}
+	labels := make([]string, 0, len(dc.unclassifiedEventMetadataKeys)+2)
+	labels = append(labels, "result", "classified_by")
 	for _, key := range dc.unclassifiedEventMetadataKeys {
 		labels = append(labels, metadataKeyToLabel(key))
 	}

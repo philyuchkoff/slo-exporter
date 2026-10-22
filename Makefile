@@ -4,7 +4,7 @@ TMP_DIR ?= $(SRC_DIR)/tmp
 TMP_BIN_DIR ?= $(TMP_DIR)/bin
 
 GORELEASER_VERSION ?= v2.4.4
-GOLANGCI_LINT_VERSION ?= v1.64.8
+GOLANGCI_LINT_VERSION ?= v2.15.0
 
 .PHONY: all
 all: lint test-and-coverage build test-release
@@ -30,7 +30,7 @@ $(RELEASE_NOTES): $(TMP_DIR)
 .PHONY: golangci-lint
 golangci-lint:
 	@echo "Downloading golangci-lint..."
-	go install github.com/golangci/golangci-lint/cmd/golangci-lint@$(GOLANGCI_LINT_VERSION)
+	go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@$(GOLANGCI_LINT_VERSION)
 
 .PHONY: lint
 lint: golangci-lint
